@@ -58,6 +58,128 @@
 	<div class="reveal">
 		<div class="slides">
 
+			<section>
+				<h1>Monkeys in the Machine</h1>
+				<h4>JavaScript, Promises, and WebWorkers</h4>
+				<p>
+					<small><a href="http://eamann.com">Eric Mann</a> / <a href="https://twitter.com/ericmann">@ericmann</a> / <a href="http://10up.com">10up</a></small>
+				</p>
+			</section>
+
+			<section>
+				<h2>To be, or not to be ...</h2>
+				<img src="assets/shakespeare.jpg" alt="William Shakespeare" />
+
+				<aside class="notes">
+					To be, or not to be, that is the question—
+					Whether 'tis Nobler in the mind to suffer
+					The Slings and Arrows of outrageous Fortune,
+					Or to take Arms against a Sea of troubles,
+					And by opposing end them?
+				</aside>
+			</section>
+
+			<section>
+				<h2>Infinite Monkey Theorem</h2>
+				<blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
+					&ldquo;For years there has been a theory that millions of monkeys typing at random on millions of typewriters would
+					reproduce the entire works of Shakespeare. The Internet has proven this theory to be untrue.&rdquo;
+				</blockquote>
+			</section>
+
+			<section>
+				<img src="assets/small_monkey.png" alt="Pygmy marmoset. Photo &copy; 2007 su neko" />
+			</section>
+
+			<section>
+				<h2>Monkeys v1</h2>
+				<pre><code data-trim>
+(function() {
+    createRandomPopulation();
+
+    selectParentsForNextGeneration();
+    breedNextGeneration();
+
+    if ( theyCanWriteHamlet() ) {
+        alert( 'done!' );
+    } else {
+        selectParentsForNextGeneration();
+        breedNextGeneration();
+
+        // ... iterate 5000+ times
+    }
+})();
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Moneys v1 will <i>kill</i> your machine</h2>
+				<ul>
+					<li>The browser is single-threaded</li>
+					<li>The iterations above expand to a monolithic application of several <i>thousand</i> lines</li>
+					<li>Any browser UI will become immediately unresponsive</li>
+					<li>The browser  will kill the monkeys before they're done</li>
+				</ul>
+				<img src="assets/unresponsive.png" title="Unresponsive Browser" />
+			</section>
+
+			<section>
+				<h2>Monkeys v2</h2>
+				<pre><code data-trim>
+(function() {
+    createRandomPopulation();
+
+    function createNextGeneration() {
+        selectParentsForNextGeneration();
+        breedNextGeneration();
+
+        if ( theyCanWriteHamlet() ) {
+            alert( 'done!' );
+        } else {
+            window.setTimeout( createNextGeneration, 10 );
+        }
+    }
+
+    createNextGeneration();
+})();
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Moneys v2 will work, but ...</h2>
+				<ul>
+					<li>The browser is <i>still</i> single-threaded</li>
+					<li>With several thousand iterations, this will take a long, <i>long</i> time</li>
+					<li>The solution isn't optimized for your hardware.</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>Monkeys v3</h2>
+				<pre><code data-trim>
+(function() {
+    createRandomPopulation();
+
+    for ( var worker in workers ) {
+        worker.postMessage( JSON.stringify( { 'method': 'breedNext' } ) );
+    }
+
+    $.when.apply( $, workers ).then( function() {
+        alert( 'done' );
+    } );
+})();
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Monkeys v3 is the optimal solution</h2>
+				<ul>
+					<li>Can use <i>All</i> of the processing power of your machine</li>
+					<li>Doesn't block the UI thread <i>at all</i></li>
+					<li>Completely clean global scope per worker</li>
+				</ul>
+				<img src="assets/cpu_usage.png" alt="CPU usage > 100%" />
+			</section>
 		</div>
 	</div>
 
@@ -83,7 +205,6 @@
 				{ src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 				{ src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 				{ src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-				{ src: 'bower_components/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
 				{ src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
 			]
 		});
