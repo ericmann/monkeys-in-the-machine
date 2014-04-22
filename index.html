@@ -4,15 +4,15 @@
 	<meta charset="utf-8">
 	<title>JSConfBR 2014 - Monkeys in the Machine</title>
 
-	<meta name="description" content="">
+	<meta name="description" content="Asynchronous webworkers and jQuery promises combine to solve the million monkey problem.">
 	<meta name="author" content="Eric Mann">
 	<link rel="publisher" href="https://plus.google.com/111597115655849308724/posts"/>
 
 	<meta property="og:locale" content="en_US" />
 	<meta property="og:type" content="article" />
 	<meta property="og:title" content="JSConfBR 2014 - Monkeys in the Machine" />
-	<meta property="og:description" content="WordPress&#039; password creation/verification system is pluggable. Before you do so, though, you should understand what&#039;s already implemented and why." />
-	<meta property="og:url" content="http://labs.eamann.com/monkeys-in-the-machine/" />
+	<meta property="og:description" content="Asynchronous webworkers and jQuery promises combine to solve the million monkey problem." />
+	<meta property="og:url" content="http://ericmann.github.io/monkeys-in-the-machine" />
 	<meta property="og:site_name" content="Eric A Mann" />
 	<meta property="article:tag" content="javascript" />
 	<meta property="article:tag" content="asynchronous" />
@@ -146,7 +146,7 @@
 			</section>
 
 			<section>
-				<h2>Moneys v2 will work, but ...</h2>
+				<h2>Monkeys v2 will work<br>&hellip; kinda</h2>
 				<ul>
 					<li>The browser is <i>still</i> single-threaded</li>
 					<li>With several thousand iterations, this will take a long, <i>long</i> time</li>
@@ -175,10 +175,15 @@
 				<h2>Monkeys v3 is the optimal solution</h2>
 				<ul>
 					<li>Can use <i>All</i> of the processing power of your machine</li>
-					<li>Doesn't block the UI thread <i>at all</i></li>
+					<li>Doesn't block the UI thread</li>
 					<li>Completely clean global scope per worker</li>
 				</ul>
 				<img src="assets/cpu_usage.png" alt="CPU usage > 100%" />
+			</section>
+
+			<section>
+				<h2>Walkthrough</h2>
+				<img src="assets/HamletMonkey.jpg" alt="Hamlet Monkey" />
 			</section>
 		</div>
 	</div>
