@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>JSConfBR 2014 - Monkeys in the Machine</title>
+
+	<meta name="description" content="">
+	<meta name="author" content="Eric Mann">
+	<link rel="publisher" href="https://plus.google.com/111597115655849308724/posts"/>
+
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="JSConfBR 2014 - Monkeys in the Machine" />
+	<meta property="og:description" content="WordPress&#039; password creation/verification system is pluggable. Before you do so, though, you should understand what&#039;s already implemented and why." />
+	<meta property="og:url" content="http://labs.eamann.com/monkeys-in-the-machine/" />
+	<meta property="og:site_name" content="Eric A Mann" />
+	<meta property="article:tag" content="javascript" />
+	<meta property="article:tag" content="asynchronous" />
+	<meta property="article:tag" content="parallelism" />
+	<meta property="article:tag" content="web worker" />
+	<meta property="article:section" content="Technology" />
+	<meta property="article:published_time" content="2014-04-26T08:00:28+00:00" />
+	<meta property="article:modified_time" content="2014-04-26T08:00:28+00:00" />
+	<meta property="og:updated_time" content="2014-04-26T08:00:28+00:00" />
+	<meta property="fb:admins" content="11502727" />
+	<meta name="twitter:card" content="summary"/>
+	<meta name="twitter:site" content="@ericmann"/>
+	<meta name="twitter:domain" content="Eric A Mann"/>
+	<meta name="twitter:creator" content="@ericmann"/>
+
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<link rel="stylesheet" href="bower_components/reveal.js/css/reveal.min.css">
+	<link rel="stylesheet" href="bower_components/reveal.js/css/theme/sky.css" id="theme">
+
+	<!-- For syntax highlighting -->
+	<link rel="stylesheet" href="bower_components/reveal.js/lib/css/zenburn.css">
+
+	<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+	<script>
+		if( window.location.search.match( /print-pdf/gi ) ) {
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = 'css/print/pdf.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		}
+	</script>
+
+	<!--[if lt IE 9]>
+	<script src="bower_components/reveal.js/lib/js/html5shiv.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<div class="reveal">
+		<div class="slides">
+
+		</div>
+	</div>
+
+	<script src="bower_components/reveal.js/lib/js/head.min.js"></script>
+	<script src="bower_components/reveal.js/js/reveal.min.js"></script>
+
+	<script>
+
+		// Full list of configuration options available here:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+
+			theme: 'sky',
+			transition: 'fade',
+
+			// Optional libraries used to extend on reveal.js
+			dependencies: [
+				{ src: 'bower_components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: 'bower_components/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+				{ src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+			]
+		});
+
+	</script>
+</body>
+</html>
