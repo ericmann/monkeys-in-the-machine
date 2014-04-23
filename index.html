@@ -305,25 +305,6 @@
             _population_number = 0;
 
         /**
-          * Create a random population.
-          *
-          * @param {String} text
-          * @param {Number} count
-          */
-        function populate( text, count ) {
-            if ( undefined === count ) {
-                count = 1000;
-            }
-
-            _population_number = count;
-
-            // Create a random generation of monkeys
-            for ( var i = 0; i < count; i ++ ) {
-                _population.push( createRandomGenome( text ) );
-            }
-        }
-
-        /**
          * Actually iterate across the population, using a web worker
          * to manage the loops and binding .promise callbacks to
          * notify the UI.
@@ -429,62 +410,6 @@
         }
 
         /**
-         * Select just the top half of the population for breeding.
-         *
-         * @private
-         *
-         * @return {Array}
-         */
-        function _front_runners() {
-            _population.sort( _genome_comparator );
-
-            return _population.slice( 0, ( Math.ceil( _population.length / 2 ) ) );
-        }
-
-        /**
-         * Compare two Shakespeare.Genome objects to allow for ordering.
-         *
-         * @param {Shakespeare.Genome} a
-         * @param {Shakespeare.Genome} b
-         * @private
-         */
-        function _genome_comparator( a, b ) {
-            return a.fitness - b.fitness;
-        }
-
-        /**
-         * Clear the task runner in its entirety.
-         */
-        function cleanup() {
-            // Instruct our workers to exit
-            for ( var i = 0, l = _workers.length; i < l; i++ ) {
-                _workers[ i ].postMessage( JSON.stringify( { 'method': 'cleanup' } ) );
-            }
-
-            // Reset the population
-            _workers = [];
-            _population = [];
-        }
-
-        /**
-         * Create a random genome so we can keep processing.
-         *
-         * @param {String} targetText
-         *
-         * @return {window.Shakespeare.Genome}
-         */
-        function createRandomGenome( targetText ) {
-            var genome = '',
-                length = targetText.length;
-
-            while( length-- ) {
-                genome += String.fromCharCode( Math.floor( Math.random() * 255 ) );
-            }
-
-            return new window.Shakespeare.Genome( genome, targetText );
-        }
-
-        /**
          * Expose our public methods
          */
         return {
@@ -576,17 +501,6 @@ function create_children( initial, target ) {
 
     // Return the children
     return children;
-}
-
-/**
- * Select a parent at random from our initial population.
- *
- * @returns {Shakespeare.Genome}
- */
-function random_parent() {
-    var random_index = Math.floor( Math.random() * population.length );
-
-    return population[ random_index ];
 }
 
 /**
