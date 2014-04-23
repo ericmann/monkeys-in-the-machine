@@ -184,6 +184,491 @@
 			<section>
 				<h2>Walkthrough</h2>
 				<img src="assets/HamletMonkey.jpg" alt="Hamlet Monkey" />
+				<p>Full code is available on <a href="https://github.com/ericmann/monkeys">GitHub</a></p>
+			</section>
+
+			<section>
+				<h2>Components</h2>
+				<ul>
+					<li>Workers</li>
+					<li>Promises</li>
+					<li>Genetic algorithm script</li>
+					<li>Task runner (for supervising workers)</li>
+					<li>WebWorker script</li>
+					<li>Main program script</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>HTML5 WebWorker</h2>
+				<a href="http://blogs.msdn.com/b/ie/archive/2011/07/01/web-workers-in-ie10-background-javascript-makes-web-apps-faster.aspx" title="WebWorkers in IE10">
+					<img src="assets/web_worker.png" alt="WebWorker Scope" />
+				</a>
+			</section>
+
+			<section>
+				<h2>Promises</h2>
+				<a href="http://blog.mediumequalsmessage.com/promise-deferred-objects-in-javascript-pt1-theory-and-semantics" title="Promise & Deferred objects in JavaScript Pt.1">
+					<img src="assets/promises.png" alt="JavaScript Promises" />
+				</a>
+			</section>
+
+			<section>
+				<h2>Genetic Algorithms</h2>
+				<pre><code data-trim>
+( function( window, undefined ) {
+    /**
+     * Represent a single genome.
+     *
+     * @param {string} text
+     * @param {string} targetText
+     * @constructor
+     */
+    function Genome( text, targetText) {
+        var SELF = this,
+            fitness;
+
+        /**
+         * Calculate the fitness of a single genome string by calculating
+         * its total distance from the target genome.
+         *
+         * Lower numbers are considered "more fit."
+         */
+        function recomputeFitness() {
+            if ( null !== text && null !== targetText ) {
+                var diffs = 0;
+                for ( var i = 0, l = targetText.length; i < l; i++ ) {
+                    if ( targetText[i] !== text[i] ) {
+                        var textDiff = text.charCodeAt( i ) -
+                            targetText.charCodeAt( i );
+
+                        diffs += Math.pow( textDiff, 2 );
+                    }
+                }
+
+                fitness = diffs;
+            } else {
+                fitness = Number.MAX_VALUE;
+            }
+        }
+
+        SELF.__defineGetter__( 'text', function() {
+            return text;
+        } );
+
+        SELF.__defineSetter__( 'text', function( value ) {
+            text = value;
+            recomputeFitness();
+        } );
+
+        SELF.__defineGetter__( 'targetText', function() {
+            return targetText;
+        } );
+
+        SELF.__defineSetter__( 'targetText', function( value ) {
+            targetText = value;
+            recomputeFitness();
+        } );
+
+        SELF.__defineGetter__( 'fitness', function() {
+            return fitness;
+        } );
+
+        // Initialize fitness
+        recomputeFitness();
+    }
+
+    window.Shakespeare = window.Shakespeare || {};
+    window.Shakespeare.Genome = Genome;
+} )( this );
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Task Runner</h2>
+				<pre><code data-trim>
+( function( windows, $, undefined ) {
+    var document = window.document;
+
+    /**
+     * Build a ZooKeeper task runner.
+     *
+     * @returns {{populate: populate, run: run, cleanup: cleanup}}
+     * @constructor
+     */
+    function ZooKeeper() {
+        var _workers = [],
+            _generation = 1,
+            _rate = 0,
+            _start = 0,
+            _population = [],
+            _population_number = 0;
+
+        /**
+          * Create a random population.
+          *
+          * @param {String} text
+          * @param {Number} count
+          */
+        function populate( text, count ) {
+            if ( undefined === count ) {
+                count = 1000;
+            }
+
+            _population_number = count;
+
+            // Create a random generation of monkeys
+            for ( var i = 0; i < count; i ++ ) {
+                _population.push( createRandomGenome( text ) );
+            }
+        }
+
+        /**
+         * Actually iterate across the population, using a web worker
+         * to manage the loops and binding .promise callbacks to
+         * notify the UI.
+         *
+         * @returns {$.Deferred}
+         */
+        function run() {
+            var deferred = $.Deferred();
+
+            // Set up our initial environment
+            _generation = 1;
+            _rate = 0;
+            _start = Math.floor( Date.now() / 1000 );
+
+            // Set up workers if they don't exist
+            if ( _workers.length === 0 ) {
+                for ( var i = 0; i < 3; i++ ) {
+                    _workers.push( new Worker( 'assets/scripts/worker.js' ) );
+                }
+            }
+
+            // Start running steps
+            _next( deferred );
+
+            // Return a promise so we can bind events
+            return deferred.promise()
+        }
+
+        /**
+         * Run the next step
+         *
+         * @param {$.Deferred} deferred
+         */
+        function _next( deferred ) {
+            // Run a step and wait until it's complete.
+            _step().done( function( best ) {
+                if ( undefined === best ) {
+                    deferred.reject();
+                    return;
+                }
+
+                if ( 0 === best.fitness ) {
+                    deferred.resolveWith( { 'generation': _generation, 'generation_rate': _rate, 'best': best.text } );
+                } else {
+                    deferred.notifyWith( { 'generation': _generation, 'generation_rate': _rate, 'best': best.text } );
+
+                    // Iterate
+                    _generation += 1;
+                    _rate = _generation / Math.max( 1, Math.floor( Date.now() / 1000 ) - _start );
+                    _next( deferred );
+                }
+            } );
+        }
+
+        /**
+         * Perform an iteration
+         */
+        function _step() {
+            var deferred = $.Deferred(),
+                promises = [],
+                initial = _front_runners(),
+                _descendants = [];
+
+            for ( var i = 0, l = _workers.length; i < l; i++ ) {
+                var worker_promise = $.Deferred();
+
+                // Set the worker's onmessage handler manually to prevent any overlap
+                _workers[ i ].onmessage = ( function( worker, promise, initial ) {
+                    return function( event ) {
+                        var data = window.JSON.parse( event.data );
+
+                        // Combine our arrays to make sure the the new population is built up out of generated children
+                        _descendants = _descendants.concat( data.children );
+
+                        if ( _descendants.length >= _population.length ) {
+                            promise.resolve();
+                        } else {
+                            worker.postMessage( window.JSON.stringify( { 'method': 'spawn', 'parents': initial, 'target': _population[0].targetText } ) );
+                        }
+                    }
+                } )( _workers[i], worker_promise, initial );
+
+                // Kick off an initial iteration for the worker.
+                _workers[ i ].postMessage( JSON.stringify( { 'method': 'spawn', 'parents': initial, 'target': _population[0].targetText } ) );
+
+                promises.push( worker_promise.promise() );
+            }
+
+            // After the workers have all completed their tasks, complete the step itself
+            $.when.apply( $, promises ).then( function() {
+                _descendants.sort( _genome_comparator );
+                _descendants = _descendants.slice( 0, _population_number );
+
+                // Update the population to be the descendant generation
+                _population = _descendants;
+
+                // Resolve our step with the best child out of the descendant array
+                deferred.resolve( _descendants.shift() );
+            } );
+
+            // Return a promise so we can bind event handlers
+            return deferred.promise();
+        }
+
+        /**
+         * Select just the top half of the population for breeding.
+         *
+         * @private
+         *
+         * @return {Array}
+         */
+        function _front_runners() {
+            _population.sort( _genome_comparator );
+
+            return _population.slice( 0, ( Math.ceil( _population.length / 2 ) ) );
+        }
+
+        /**
+         * Compare two Shakespeare.Genome objects to allow for ordering.
+         *
+         * @param {Shakespeare.Genome} a
+         * @param {Shakespeare.Genome} b
+         * @private
+         */
+        function _genome_comparator( a, b ) {
+            return a.fitness - b.fitness;
+        }
+
+        /**
+         * Clear the task runner in its entirety.
+         */
+        function cleanup() {
+            // Instruct our workers to exit
+            for ( var i = 0, l = _workers.length; i < l; i++ ) {
+                _workers[ i ].postMessage( JSON.stringify( { 'method': 'cleanup' } ) );
+            }
+
+            // Reset the population
+            _workers = [];
+            _population = [];
+        }
+
+        /**
+         * Create a random genome so we can keep processing.
+         *
+         * @param {String} targetText
+         *
+         * @return {window.Shakespeare.Genome}
+         */
+        function createRandomGenome( targetText ) {
+            var genome = '',
+                length = targetText.length;
+
+            while( length-- ) {
+                genome += String.fromCharCode( Math.floor( Math.random() * 255 ) );
+            }
+
+            return new window.Shakespeare.Genome( genome, targetText );
+        }
+
+        /**
+         * Expose our public methods
+         */
+        return {
+            populate: populate,
+            run: run,
+            cleanup: cleanup
+        };
+    }
+
+    window.Shakespeare.ZooKeeper = ZooKeeper;
+} )(this, jQuery );
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>WebWorker</h2>
+				<pre><code data-trim>
+// Import scripts for managing the Genome object and calculating genetics matches
+importScripts( 'shakespeare.genome.js' );
+
+var probabilities = {
+    cross_over: 0.85,
+    mutation:   0.50
+    },
+    population = [],
+    maxFitness = 0,
+    sumOfMaxMinusFitness = 0;
+
+onmessage = function ( event ) {
+    var data = JSON.parse( event.data );
+
+    switch ( data.method ) {
+        case 'cleanup':
+            // Close out the worker
+            self.close();
+            break;
+        case 'spawn':
+            // Collect our children
+            var children = create_children( data.parents, data.target );
+
+            // Send our children back to the task runner
+            postMessage( JSON.stringify( { 'children': children } ) );
+            break;
+    }
+};
+
+/**
+ * Create a pair of child strings given an initial array of high-fitness candidates.
+ *
+ * @param {Array}  initial
+ * @param {String} target
+ */
+function create_children( initial, target ) {
+    var children = [];
+
+    for ( i = 0, l = initial.length; i < l; i ++ ) {
+        maxFitness = Math.max( maxFitness, initial[i].fitness );
+    }
+    maxFitness += 1;
+
+    for ( i = 0, l = initial.length; i < l; i ++ ) {
+        sumOfMaxMinusFitness += ( maxFitness - initial[i].fitness );
+    }
+
+    // Expose the initial population so we can reference it elsewhere
+    population = initial;
+
+    // Find two high-quality parents at random
+    var father = random_parent(),
+        mother = random_parent();
+
+    // Create a mutation via crossover
+    if ( Math.random() < probabilities.cross_over ) {
+        var cross_over = Math.floor( Math.random() * father.text.length ) + 1;
+        children.push( new Shakespeare.Genome( father.text.substring( 0, cross_over ) + mother.text.substring( cross_over ), target ) );
+        children.push( new Shakespeare.Genome( mother.text.substring( 0, cross_over ) + father.text.substring( cross_over ), target ) );
+    } else {
+        children.push( father );
+        children.push( mother );
+    }
+
+    // Potentially mutate the children
+    if ( Math.random() < probabilities.mutation ) {
+        children[ 0 ] = mutate( children[ 0 ] );
+    }
+    if ( Math.random() < probabilities.mutation ) {
+        children[ 1 ] = mutate( children[ 1 ] );
+    }
+
+    // Return the children
+    return children;
+}
+
+/**
+ * Select a parent at random from our initial population.
+ *
+ * @returns {Shakespeare.Genome}
+ */
+function random_parent() {
+    var random_index = Math.floor( Math.random() * population.length );
+
+    return population[ random_index ];
+}
+
+/**
+ * Mutate a child genome.
+ *
+ * @param {Shakespeare.Genome} child
+ * @returns {Shakespeare.Genome}
+ */
+function mutate( child ) {
+    var text = child.text,
+        index = Math.floor( Math.random() * text.length ),
+        upOrDown = Math.random() <= 0.5 ? - 1 : 1,
+        newChar = String.fromCharCode( text.charCodeAt( index ) + upOrDown ),
+        newString = '';
+
+    for ( i = 0; i < text.length; i ++ ) {
+        if ( i == index ) {
+            newString += newChar;
+        } else {
+            newString += text[i];
+        }
+    }
+
+    child.text = newString;
+
+    return child;
+}
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Main Program Script</h2>
+				<pre><code data-trim>
+( function( window, $, undefined ) {
+    var document = window.document,
+        Shakespeare = window.Shakespeare,
+
+        // Variables used by the iterative processor
+        queue = null,
+        runner = null;
+
+    /**
+     * Don't just sit there, get things started.
+     *
+     * @param {string} text
+     */
+    function startTyping( text ) {
+        // Instantiate the task runner
+        runner = new Shakespeare.ZooKeeper();
+        runner.populate( text, 200 );
+
+        // Start running the task
+        queue = runner.run();
+
+        // Update progress
+        queue.progress( function() {
+            updateProgress();
+        } );
+
+        // On complete
+        queue.done( function() {
+            updateProgress();
+
+            runner.cleanup();
+            runner = null;
+            queue = null;
+        } );
+    }
+} )( window, jQuery );
+				</code></pre>
+			</section>
+
+			<section>
+				<h2>Live Demo</h2>
+				<iframe src="http://monkeys.dev" width="100%" height="480px"></iframe>
+			</section>
+
+			<section>
+				<h1>Thank You</h1>
+				<p>
+					<small><a href="http://eamann.com">Eric Mann</a> / <a href="https://twitter.com/ericmann">@ericmann</a> / <a href="http://10up.com">10up</a></small>
+				</p>
 			</section>
 		</div>
 	</div>
