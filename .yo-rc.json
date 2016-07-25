@@ -1,0 +1,10 @@
+{
+  "generator-reveal": {
+    "presentationTitle": "JavaScript for PHP Developers",
+    "packageVersion": "2.0.1",
+    "useSass": true,
+    "deployToGithubPages": true,
+    "githubUsername": "ericmann",
+    "githubRepository": "javascript-for-php"
+  }
+}

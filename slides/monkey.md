@@ -1,0 +1,1 @@
+<img src="resources/small_monkey.png" alt="Pygmy marmoset. Photo &copy; 2007 su neko" />

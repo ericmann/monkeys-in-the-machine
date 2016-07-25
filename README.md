@@ -1,3 +1,3 @@
-# Monkeys in the Machine #
+# Monkeys in the Machine
 
-Use web workers wrapped in jQuery Deferreds to asychronously create virtual monkeys who can write flawless Shakespeare.
+Use asynchronous worker threads to simulate virtual Monkeys attempting to write flawless Shakespeare.

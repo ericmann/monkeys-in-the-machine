@@ -39,103 +39,18 @@
 
             <div class="slides">
 
-                
-                    
-                        
-    <section data-markdown="slides/index.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/shakespeare.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/infinite-monkeys.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkey.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v1.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v1-problems.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v2.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v2-problems.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v3.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/monkeys-v3-optimal.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/walkthrough.md"></section>
-
-
-                    
-                    
-                
-                    
-                        
-    <section data-markdown="slides/thanks.md"></section>
-
-
-                    
-                    
-                
+                <% _.forEach(slides, function(slide) { %>
+                    <% if (!_.isArray(slide)) { %>
+                        <%= section(slide) %>
+                    <% } %>
+                    <% if (_.isArray(slide)) { %>
+                        <section>
+                            <% _.forEach(slide, function(verticalslide) { %>
+                                <%= section(verticalslide) %>
+                            <% }); %>
+                        </section>
+                    <% } %>
+                <% }); %>
             </div>
 
         </div>
