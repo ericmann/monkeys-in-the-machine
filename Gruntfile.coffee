@@ -101,7 +101,7 @@ module.exports = (grunt) ->
                 message: 'Built from %sourceCommit% on branch %sourceBranch%'
             pages:
                 options:
-                    remote: 'git@github.com:ericmann/javascript-for-php.git'
+                    remote: 'git@github.com:ericmann/monkeys-in-the-machine.git'
                     branch: 'gh-pages'
         
 
