@@ -1,618 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Monkeys in the Machine</title>
-
-	<meta name="description" content="Asynchronous webworkers and jQuery promises combine to solve the million monkey problem.">
-	<meta name="author" content="Eric Mann">
-	<link rel="publisher" href="https://plus.google.com/111597115655849308724/posts"/>
-
-	<meta property="og:locale" content="en_US" />
-	<meta property="og:type" content="article" />
-	<meta property="og:title" content="Monkeys in the Machine" />
-	<meta property="og:description" content="Asynchronous webworkers and jQuery promises combine to solve the million monkey problem." />
-	<meta property="og:url" content="https://ericmann.github.io/monkeys-in-the-machine" />
-	<meta property="og:site_name" content="Eric A Mann" />
-	<meta property="article:tag" content="javascript" />
-	<meta property="article:tag" content="asynchronous" />
-	<meta property="article:tag" content="parallelism" />
-	<meta property="article:tag" content="web worker" />
-	<meta property="article:section" content="Technology" />
-	<meta property="article:published_time" content="2014-04-26T08:00:28+00:00" />
-	<meta property="article:modified_time" content="2014-04-26T08:00:28+00:00" />
-	<meta property="og:updated_time" content="2014-04-26T08:00:28+00:00" />
-	<meta property="fb:admins" content="11502727" />
-	<meta name="twitter:card" content="summary"/>
-	<meta name="twitter:site" content="@ericmann"/>
-	<meta name="twitter:domain" content="Eric A Mann"/>
-	<meta name="twitter:creator" content="@ericmann"/>
-
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-	<link rel="stylesheet" href="bower_components/reveal.js/css/reveal.min.css">
-	<link rel="stylesheet" href="bower_components/reveal.js/css/theme/sky.css" id="theme">
-
-	<!-- For syntax highlighting -->
-	<link rel="stylesheet" href="bower_components/reveal.js/lib/css/zenburn.css">
-
-	<!-- If the query includes 'print-pdf', include the PDF print sheet -->
-	<script>
-		if( window.location.search.match( /print-pdf/gi ) ) {
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = 'css/print/pdf.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		}
-	</script>
-
-	<!--[if lt IE 9]>
-	<script src="bower_components/reveal.js/lib/js/html5shiv.js"></script>
-	<![endif]-->
-</head>
-<body>
-	<div class="reveal">
-		<div class="slides">
-
-			<section>
-				<h1>Monkeys in the Machine</h1>
-				<h4>JavaScript, Promises, and WebWorkers</h4>
-				<p>
-					<small><a href="http://eamann.com">Eric Mann</a> / <a href="https://twitter.com/ericmann">@ericmann</a> / <a href="http://10up.com">10up</a></small>
-				</p>
-			</section>
-
-			<section>
-				<h2>To be, or not to be ...</h2>
-				<img src="assets/shakespeare.jpg" alt="William Shakespeare" />
-
-				<aside class="notes">
-					To be, or not to be, that is the question—
-					Whether 'tis Nobler in the mind to suffer
-					The Slings and Arrows of outrageous Fortune,
-					Or to take Arms against a Sea of troubles,
-					And by opposing end them?
-				</aside>
-			</section>
-
-			<section>
-				<h2>Infinite Monkey Theorem</h2>
-				<blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
-					&ldquo;For years there has been a theory that millions of monkeys typing at random on millions of typewriters would
-					reproduce the entire works of Shakespeare. The Internet has proven this theory to be untrue.&rdquo;
-				</blockquote>
-			</section>
-
-			<section>
-				<img src="assets/small_monkey.png" alt="Pygmy marmoset. Photo &copy; 2007 su neko" />
-			</section>
-
-			<section>
-				<h2>Monkeys v1</h2>
-				<pre><code data-trim>
-(function() {
-    createRandomPopulation();
-
-    selectParentsForNextGeneration();
-    breedNextGeneration();
-
-    if ( theyCanWriteHamlet() ) {
-        alert( 'done!' );
-    } else {
-        selectParentsForNextGeneration();
-        breedNextGeneration();
-
-        // ... iterate 5000+ times
-    }
-})();
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Moneys v1 will <i>kill</i> your machine</h2>
-				<ul>
-					<li>The browser is single-threaded</li>
-					<li>The iterations above expand to a monolithic application of several <i>thousand</i> lines</li>
-					<li>Any browser UI will become immediately unresponsive</li>
-					<li>The browser  will kill the monkeys before they're done</li>
-				</ul>
-				<img src="assets/unresponsive.png" title="Unresponsive Browser" />
-			</section>
-
-			<section>
-				<h2>Monkeys v2</h2>
-				<pre><code data-trim>
-(function() {
-    createRandomPopulation();
-
-    function createNextGeneration() {
-        selectParentsForNextGeneration();
-        breedNextGeneration();
-
-        if ( theyCanWriteHamlet() ) {
-            alert( 'done!' );
-        } else {
-            window.setTimeout( createNextGeneration, 10 );
-        }
-    }
-
-    createNextGeneration();
-})();
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Monkeys v2 will work<br>&hellip; kinda</h2>
-				<ul>
-					<li>The browser is <i>still</i> single-threaded</li>
-					<li>With several thousand iterations, this will take a long, <i>long</i> time</li>
-					<li>The solution isn't optimized for your hardware.</li>
-				</ul>
-			</section>
-
-			<section>
-				<h2>Monkeys v3</h2>
-				<pre><code data-trim>
-(function() {
-    createRandomPopulation();
-
-    for ( var worker in workers ) {
-        worker.postMessage( JSON.stringify( { 'method': 'breedNext' } ) );
-    }
-
-    $.when.apply( $, workers ).then( function() {
-        alert( 'done' );
-    } );
-})();
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Monkeys v3 is the optimal solution</h2>
-				<ul>
-					<li>Can use <i>All</i> of the processing power of your machine</li>
-					<li>Doesn't block the UI thread</li>
-					<li>Completely clean global scope per worker</li>
-				</ul>
-				<img src="assets/cpu_usage.png" alt="CPU usage > 100%" />
-			</section>
-
-			<section>
-				<h2>Walkthrough</h2>
-				<img src="assets/HamletMonkey.jpg" alt="Hamlet Monkey" />
-				<p>Full code is available on <a href="https://github.com/ericmann/monkeys">GitHub</a></p>
-			</section>
-
-			<section>
-				<h2>Components</h2>
-				<ul>
-					<li>Workers</li>
-					<li>Promises</li>
-					<li>Genetic algorithm script</li>
-					<li>Task runner (for supervising workers)</li>
-					<li>WebWorker script</li>
-					<li>Main program script</li>
-				</ul>
-			</section>
-
-			<section>
-				<h2>HTML5 WebWorker</h2>
-				<a href="http://blogs.msdn.com/b/ie/archive/2011/07/01/web-workers-in-ie10-background-javascript-makes-web-apps-faster.aspx" title="WebWorkers in IE10">
-					<img src="assets/web_worker.png" alt="WebWorker Scope" />
-				</a>
-			</section>
-
-			<section>
-				<h2>Promises</h2>
-				<a href="http://blog.mediumequalsmessage.com/promise-deferred-objects-in-javascript-pt1-theory-and-semantics" title="Promise & Deferred objects in JavaScript Pt.1">
-					<img src="assets/promises.png" alt="JavaScript Promises" />
-				</a>
-			</section>
-
-			<section>
-				<h2>Genetic Algorithms</h2>
-				<pre><code data-trim>
-( function( window, undefined ) {
-    /**
-     * Represent a single genome.
-     *
-     * @param {string} text
-     * @param {string} targetText
-     * @constructor
-     */
-    function Genome( text, targetText) {
-        var SELF = this,
-            fitness;
-
-        /**
-         * Calculate the fitness of a single genome string by calculating
-         * its total distance from the target genome.
-         *
-         * Lower numbers are considered "more fit."
-         */
-        function recomputeFitness() {
-            if ( null !== text && null !== targetText ) {
-                var diffs = 0;
-                for ( var i = 0, l = targetText.length; i < l; i++ ) {
-                    if ( targetText[i] !== text[i] ) {
-                        var textDiff = text.charCodeAt( i ) -
-                            targetText.charCodeAt( i );
-
-                        diffs += Math.pow( textDiff, 2 );
-                    }
-                }
-
-                fitness = diffs;
-            } else {
-                fitness = Number.MAX_VALUE;
-            }
-        }
-
-        SELF.__defineGetter__( 'text', function() {
-            return text;
-        } );
-
-        SELF.__defineSetter__( 'text', function( value ) {
-            text = value;
-            recomputeFitness();
-        } );
-
-        SELF.__defineGetter__( 'targetText', function() {
-            return targetText;
-        } );
-
-        SELF.__defineSetter__( 'targetText', function( value ) {
-            targetText = value;
-            recomputeFitness();
-        } );
-
-        SELF.__defineGetter__( 'fitness', function() {
-            return fitness;
-        } );
-
-        // Initialize fitness
-        recomputeFitness();
-    }
-
-    window.Shakespeare = window.Shakespeare || {};
-    window.Shakespeare.Genome = Genome;
-} )( this );
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Task Runner</h2>
-				<pre><code data-trim>
-( function( windows, $, undefined ) {
-    var document = window.document;
-
-    /**
-     * Build a ZooKeeper task runner.
-     *
-     * @returns {{populate: populate, run: run, cleanup: cleanup}}
-     * @constructor
-     */
-    function ZooKeeper() {
-        var _workers = [],
-            _generation = 1,
-            _rate = 0,
-            _start = 0,
-            _population = [],
-            _population_number = 0;
-
-        /**
-         * Actually iterate across the population, using a web worker
-         * to manage the loops and binding .promise callbacks to
-         * notify the UI.
-         *
-         * @returns {$.Deferred}
-         */
-        function run() {
-            var deferred = $.Deferred();
-
-            // Set up our initial environment
-            _generation = 1;
-            _rate = 0;
-            _start = Math.floor( Date.now() / 1000 );
-
-            // Set up workers if they don't exist
-            if ( _workers.length === 0 ) {
-                for ( var i = 0; i < 3; i++ ) {
-                    _workers.push( new Worker( 'assets/scripts/worker.js' ) );
-                }
-            }
-
-            // Start running steps
-            _next( deferred );
-
-            // Return a promise so we can bind events
-            return deferred.promise()
-        }
-
-        /**
-         * Run the next step
-         *
-         * @param {$.Deferred} deferred
-         */
-        function _next( deferred ) {
-            // Run a step and wait until it's complete.
-            _step().done( function( best ) {
-                if ( undefined === best ) {
-                    deferred.reject();
-                    return;
-                }
-
-                if ( 0 === best.fitness ) {
-                    deferred.resolveWith( { 'generation': _generation, 'generation_rate': _rate, 'best': best.text } );
-                } else {
-                    deferred.notifyWith( { 'generation': _generation, 'generation_rate': _rate, 'best': best.text } );
-
-                    // Iterate
-                    _generation += 1;
-                    _rate = _generation / Math.max( 1, Math.floor( Date.now() / 1000 ) - _start );
-                    _next( deferred );
-                }
-            } );
-        }
-
-        /**
-         * Perform an iteration
-         */
-        function _step() {
-            var deferred = $.Deferred(),
-                promises = [],
-                initial = _front_runners(),
-                _descendants = [];
-
-            for ( var i = 0, l = _workers.length; i < l; i++ ) {
-                var worker_promise = $.Deferred();
-
-                // Set the worker's onmessage handler manually to prevent any overlap
-                _workers[ i ].onmessage = ( function( worker, promise, initial ) {
-                    return function( event ) {
-                        var data = window.JSON.parse( event.data );
-
-                        // Combine our arrays to make sure the the new population is built up out of generated children
-                        _descendants = _descendants.concat( data.children );
-
-                        if ( _descendants.length >= _population.length ) {
-                            promise.resolve();
-                        } else {
-                            worker.postMessage( window.JSON.stringify( { 'method': 'spawn', 'parents': initial, 'target': _population[0].targetText } ) );
-                        }
-                    }
-                } )( _workers[i], worker_promise, initial );
-
-                // Kick off an initial iteration for the worker.
-                _workers[ i ].postMessage( JSON.stringify( { 'method': 'spawn', 'parents': initial, 'target': _population[0].targetText } ) );
-
-                promises.push( worker_promise.promise() );
-            }
-
-            // After the workers have all completed their tasks, complete the step itself
-            $.when.apply( $, promises ).then( function() {
-                _descendants.sort( _genome_comparator );
-                _descendants = _descendants.slice( 0, _population_number );
-
-                // Update the population to be the descendant generation
-                _population = _descendants;
-
-                // Resolve our step with the best child out of the descendant array
-                deferred.resolve( _descendants.shift() );
-            } );
-
-            // Return a promise so we can bind event handlers
-            return deferred.promise();
-        }
-
-        /**
-         * Expose our public methods
-         */
-        return {
-            populate: populate,
-            run: run,
-            cleanup: cleanup
-        };
-    }
-
-    window.Shakespeare.ZooKeeper = ZooKeeper;
-} )(this, jQuery );
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>WebWorker</h2>
-				<pre><code data-trim>
-// Import scripts for managing the Genome object and calculating genetics matches
-importScripts( 'shakespeare.genome.js' );
-
-var probabilities = {
-    cross_over: 0.85,
-    mutation:   0.50
-    },
-    population = [],
-    maxFitness = 0,
-    sumOfMaxMinusFitness = 0;
-
-onmessage = function ( event ) {
-    var data = JSON.parse( event.data );
-
-    switch ( data.method ) {
-        case 'cleanup':
-            // Close out the worker
-            self.close();
-            break;
-        case 'spawn':
-            // Collect our children
-            var children = create_children( data.parents, data.target );
-
-            // Send our children back to the task runner
-            postMessage( JSON.stringify( { 'children': children } ) );
-            break;
-    }
-};
-
-/**
- * Create a pair of child strings given an initial array of high-fitness candidates.
- *
- * @param {Array}  initial
- * @param {String} target
- */
-function create_children( initial, target ) {
-    var children = [];
-
-    for ( i = 0, l = initial.length; i < l; i ++ ) {
-        maxFitness = Math.max( maxFitness, initial[i].fitness );
-    }
-    maxFitness += 1;
-
-    for ( i = 0, l = initial.length; i < l; i ++ ) {
-        sumOfMaxMinusFitness += ( maxFitness - initial[i].fitness );
-    }
-
-    // Expose the initial population so we can reference it elsewhere
-    population = initial;
-
-    // Find two high-quality parents at random
-    var father = random_parent(),
-        mother = random_parent();
-
-    // Create a mutation via crossover
-    if ( Math.random() < probabilities.cross_over ) {
-        var cross_over = Math.floor( Math.random() * father.text.length ) + 1;
-        children.push( new Shakespeare.Genome( father.text.substring( 0, cross_over ) + mother.text.substring( cross_over ), target ) );
-        children.push( new Shakespeare.Genome( mother.text.substring( 0, cross_over ) + father.text.substring( cross_over ), target ) );
-    } else {
-        children.push( father );
-        children.push( mother );
-    }
-
-    // Potentially mutate the children
-    if ( Math.random() < probabilities.mutation ) {
-        children[ 0 ] = mutate( children[ 0 ] );
-    }
-    if ( Math.random() < probabilities.mutation ) {
-        children[ 1 ] = mutate( children[ 1 ] );
-    }
-
-    // Return the children
-    return children;
-}
-
-/**
- * Mutate a child genome.
- *
- * @param {Shakespeare.Genome} child
- * @returns {Shakespeare.Genome}
- */
-function mutate( child ) {
-    var text = child.text,
-        index = Math.floor( Math.random() * text.length ),
-        upOrDown = Math.random() <= 0.5 ? - 1 : 1,
-        newChar = String.fromCharCode( text.charCodeAt( index ) + upOrDown ),
-        newString = '';
-
-    for ( i = 0; i < text.length; i ++ ) {
-        if ( i == index ) {
-            newString += newChar;
-        } else {
-            newString += text[i];
-        }
-    }
-
-    child.text = newString;
-
-    return child;
-}
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Main Program Script</h2>
-				<pre><code data-trim>
-( function( window, $, undefined ) {
-    var document = window.document,
-        Shakespeare = window.Shakespeare,
-
-        // Variables used by the iterative processor
-        queue = null,
-        runner = null;
-
-    /**
-     * Don't just sit there, get things started.
-     *
-     * @param {string} text
-     */
-    function startTyping( text ) {
-        // Instantiate the task runner
-        runner = new Shakespeare.ZooKeeper();
-        runner.populate( text, 200 );
-
-        // Start running the task
-        queue = runner.run();
-
-        // Update progress
-        queue.progress( function() {
-            updateProgress();
-        } );
-
-        // On complete
-        queue.done( function() {
-            updateProgress();
-
-            runner.cleanup();
-            runner = null;
-            queue = null;
-        } );
-    }
-} )( window, jQuery );
-				</code></pre>
-			</section>
-
-			<section>
-				<h2>Live Demo</h2>
-				<iframe src="https://ericmann.github.io/monkeys" width="100%" height="480px"></iframe>
-			</section>
-
-			<section>
-				<h1>Thank You</h1>
-				<p>
-					<small><a href="http://eamann.com">Eric Mann</a> / <a href="https://twitter.com/ericmann">@ericmann</a> / <a href="http://10up.com">10up</a></small>
-				</p>
-			</section>
-		</div>
-	</div>
-
-	<script src="bower_components/reveal.js/lib/js/head.min.js"></script>
-	<script src="bower_components/reveal.js/js/reveal.min.js"></script>
-
-	<script>
-
-		// Full list of configuration options available here:
-		// https://github.com/hakimel/reveal.js#configuration
-		Reveal.initialize({
-			controls: true,
-			progress: true,
-			history: true,
-			center: true,
-
-			theme: 'sky',
-			transition: 'fade',
-
-			// Optional libraries used to extend on reveal.js
-			dependencies: [
-				{ src: 'bower_components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
-				{ src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-				{ src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-				{ src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-				{ src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
-			]
-		});
-
-	</script>
-</body>
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Monkeys in the Machine</title>
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+        <link rel="stylesheet" href="bower_components/reveal.js/css/reveal.css">
+    
+        <link rel="stylesheet" href="css/theme.css" id="theme">
+    
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="bower_components/highlightjs/styles/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'bower_components/reveal.js/css/print/pdf.css' : 'bower_components/reveal.js/css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="bower_components/reveal.js/lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <div class="slides">
+
+                
+                    
+                        
+    <section data-markdown="slides/index.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/shakespeare.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/infinite-monkeys.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkey.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v1.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v1-problems.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v2.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v2-problems.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v3.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/monkeys-v3-optimal.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/walkthrough.md"></section>
+
+
+                    
+                    
+                
+                    
+                        
+    <section data-markdown="slides/thanks.md"></section>
+
+
+                    
+                    
+                
+            </div>
+
+        </div>
+
+        <script src="bower_components/reveal.js/lib/js/head.min.js"></script>
+        <script src="bower_components/reveal.js/js/reveal.js"></script>
+        <script>
+
+          // Full list of configuration options available at:
+          // https://github.com/hakimel/reveal.js#configuration
+          Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Optional reveal.js plugins
+            dependencies: [
+              { src: 'bower_components/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+              { src: 'bower_components/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+              { src: 'bower_components/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+              { src: 'bower_components/reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( '[data-html]' ) || !!document.querySelector( 'pre code' ) || !!document.querySelector( '[data-markdown]' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+              { src: 'bower_components/reveal.js/plugin/zoom-js/zoom.js', async: true },
+              { src: 'bower_components/reveal.js/plugin/notes/notes.js', async: true },
+              { src: 'js/loadhtmlslides.js', condition: function() { return !!document.querySelector( '[data-html]' ); } }
+            ]
+          });
+
+        </script>
+    </body>
+
 </html>

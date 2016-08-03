@@ -1,0 +1,13 @@
+## Monkeys v3
+
+<pre class="fragment"><code data-trim lang="javascript">
+createRandomPopulation();
+
+foreach( $threads in $thread ) {
+	runInThread( $thread, breedNextGeneration );
+}
+
+Awaitable\all( $threads )->then( function() {
+    println( 'done!' );
+} );
+</code></pre>
