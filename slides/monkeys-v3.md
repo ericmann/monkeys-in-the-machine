@@ -1,15 +1,13 @@
 ## Monkeys v3
 
 <pre class="fragment"><code data-trim lang="javascript">
-(function() {
-    createRandomPopulation();
+createRandomPopulation();
 
-    for ( var worker in workers ) {
-        worker.postMessage( JSON.stringify( { 'method': 'breedNext' } ) );
-    }
+foreach( $threads in $thread ) {
+	runInThread( $thread, breedNextGeneration );
+}
 
-    $.when.apply( $, workers ).then( function() {
-        alert( 'done' );
-    } );
-})();
+Awaitable\all( $threads )->then( function() {
+    println( 'done!' );
+} );
 </code></pre>

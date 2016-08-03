@@ -1,20 +1,18 @@
 ## Monkeys v2
 
 <pre class="fragment"><code data-trim lang="javascript">
-(function() {
-    createRandomPopulation();
+createRandomPopulation();
 
-    function createNextGeneration() {
-        selectParentsForNextGeneration();
-        breedNextGeneration();
+function createNextGeneration() {
+    selectParentsForNextGeneration();
+    breedNextGeneration();
 
-        if ( theyCanWriteHamlet() ) {
-            alert( 'done!' );
-        } else {
-            window.setTimeout( createNextGeneration, 10 );
-        }
+    if ( theyCanWriteHamlet() ) {
+        println( 'done!' );
+    } else {
+        runAfterTimeout( createNextGeneration, 10 );
     }
+}
 
-    createNextGeneration();
-})();
+createNextGeneration();
 </code></pre>

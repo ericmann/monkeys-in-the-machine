@@ -1,19 +1,17 @@
 ## Monkeys v1
 
 <pre class="fragment"><code data-trim lang="javascript">
-(function() {
-    createRandomPopulation();
+createRandomPopulation();
 
+selectParentsForNextGeneration();
+breedNextGeneration();
+
+if ( theyCanWriteHamlet() ) {
+    println( 'done!' );
+} else {
     selectParentsForNextGeneration();
     breedNextGeneration();
 
-    if ( theyCanWriteHamlet() ) {
-        alert( 'done!' );
-    } else {
-        selectParentsForNextGeneration();
-        breedNextGeneration();
-
-        // ... iterate 5000+ times
-    }
-})();
+    // ... iterate 5000+ times
+}
 </code></pre>
