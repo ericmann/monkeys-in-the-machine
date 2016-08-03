@@ -1,6 +1,6 @@
 ## To be, or not to be ...
 
-<img src="resources/shakespeare.jpg" alt="William Shakespeare" />
+<img src="resources/shakespeare.jpg" alt="William Shakespeare" style="display: inline-block;width: 50%;" />
 
 note:
     To be, or not to be, that is the question—
