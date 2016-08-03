@@ -1,10 +1,10 @@
 {
   "generator-reveal": {
-    "presentationTitle": "JavaScript for PHP Developers",
-    "packageVersion": "2.0.1",
+    "presentationTitle": "Monkeys in the Machine",
+    "packageVersion": "2.0.0",
     "useSass": true,
     "deployToGithubPages": true,
     "githubUsername": "ericmann",
-    "githubRepository": "javascript-for-php"
+    "githubRepository": "monkeys-in-the-machine"
   }
 }
