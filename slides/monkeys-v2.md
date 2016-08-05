@@ -3,16 +3,12 @@
 <pre class="fragment"><code data-trim lang="javascript">
 createRandomPopulation();
 
-function createNextGeneration() {
+while ( ! theyCanWriteHamlet() ) {
     selectParentsForNextGeneration();
     breedNextGeneration();
 
-    if ( theyCanWriteHamlet() ) {
-        println( 'done!' );
-    } else {
-        runAfterTimeout( createNextGeneration, 10 );
-    }
+    // Do something else perhaps?
 }
 
-createNextGeneration();
+println( 'done!' );
 </code></pre>
