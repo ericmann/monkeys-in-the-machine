@@ -3,15 +3,10 @@
 <pre class="fragment"><code data-trim lang="javascript">
 createRandomPopulation();
 
-selectParentsForNextGeneration();
-breedNextGeneration();
-
-if ( theyCanWriteHamlet() ) {
-    println( 'done!' );
-} else {
+while ( ! theyCanWriteHamlet() ) {
     selectParentsForNextGeneration();
     breedNextGeneration();
-
-    // ... iterate 5000+ times
 }
+
+println( 'done!' );
 </code></pre>

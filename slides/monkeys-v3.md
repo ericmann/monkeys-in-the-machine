@@ -7,7 +7,7 @@ foreach( $threads in $thread ) {
 	runInThread( $thread, breedNextGeneration );
 }
 
-Awaitable\all( $threads )->then( function() {
+when( $threads )->then( function() {
     println( 'done!' );
 } );
 </code></pre>
