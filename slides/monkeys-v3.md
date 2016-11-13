@@ -3,11 +3,16 @@
 <pre class="fragment"><code data-trim lang="javascript">
 createRandomPopulation();
 
-foreach( $threads in $thread ) {
-	runInThread( $thread, breedNextGeneration );
+$collectors = [];
+foreach( $threads as $thread ) {
+	array_push( $colletors, runInThread( $thread, 'breedSome' ) );
 }
 
-when( $threads )->then( function() {
-    println( 'done!' );
-} );
+$once = breedSome();
+
+foreach( $threads as $thread ) {
+    $once = array_merge( $once, $thread->result() );
+}
+
+println( 'done!' );
 </code></pre>

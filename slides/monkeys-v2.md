@@ -3,8 +3,7 @@
 <pre class="fragment"><code data-trim lang="javascript">
 createRandomPopulation();
 
-while ( ! theyCanWriteHamlet() ) {
-    selectParentsForNextGeneration();
+while ( bestFitness() !== 0 ) {
     breedNextGeneration();
 
     // Do something else perhaps?
