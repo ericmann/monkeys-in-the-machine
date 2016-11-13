@@ -9,7 +9,7 @@ function breedMonkeys()
     yield breedNextGeneration();
 }
 
-while ( ! theyCanWriteHamlet() ) {
+while ( bestFitness() !== 0 ) {
 	breedMonkeys();
 
     // Do something else perhaps?
