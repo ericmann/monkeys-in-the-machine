@@ -5,7 +5,7 @@ createRandomPopulation();
 
 $collectors = [];
 foreach( $threads as $thread ) {
-	array_push( $colletors, runInThread( $thread, 'breedSome' ) );
+	array_push( $collectors, runInThread( $thread, 'breedSome' ) );
 }
 
 $once = breedSome();
